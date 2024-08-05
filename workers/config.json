@@ -1,0 +1,9 @@
+{
+    "base_path": "/Users/venkatapydialli/Projects/Edgetpu/lensai_server/workers",
+    "db_uri": "mongodb://localhost:27017/",
+    "db_name": "lensai",
+    "collection_name_stats": "sensor_stats",
+    "collection_name_data": "data_stats",
+    "project_id": "asdfh123",
+    "num_workers": 4
+}

@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  # Grafana service
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - TERM=linux
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-polystat-panel,grafana-mongodb-datasource
+      # Replace with connection details for your host MongoDB instance
+      - GF_DATASOURCE=mongodb://localhost:27017/lensai
+    ports:
+      - '3000:3000'
+      - '8000:8000'
+    volumes:
+      - 'grafana_storage:/var/lib/grafana'
+
+# Define volumes (optional)
+volumes:
+  grafana_storage: {}
