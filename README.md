@@ -1,7 +1,14 @@
 # Lens AI Server - Data and Model Monitoring Library for Edge AI Applications
 Lens AI Server is a comprehensive solution for collecting, aggregating, and monitoring sensor data and metrics for Edge AI applications. It provides an easy-to-use platform to observe and analyze key metrics through dashboards, enabling efficient monitoring and performance optimization of your AI models.
 
-### Lens AI Server Components
+## The following Lens AI tools
+- Lens AI Python Profiler : https://github.com/lens-ai/lensai_profiler_python
+- Lens AI C++ Profiler : https://github.com/lens-ai/lensai_profiler_cpp
+- Lens AI Monitoring Server : (The current repo)
+
+![Alt text](https://github.com/lens-ai/lensai_server/blob/main/server.png)
+
+### Lens AI monitoring server Components
 The Lens AI Server comprises five major components:
 1. Lens AI Sensor Data Handler: Manages sensor HTTP requests and stores incoming sensor data.
 2. Lens AI Workers: Aggregates, transforms, and extracts metric data from sensor inputs for analysis.
