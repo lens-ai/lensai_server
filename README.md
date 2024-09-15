@@ -10,6 +10,7 @@ The Lens AI Server comprises five major components:
 4.Lens AI Monitoring Server: Uses Grafana to build interactive dashboards for monitoring key metrics.
 5.Lens AI Database: Utilizes MongoDB to store sensor data and metrics for persistent and scalable storage.
 
+![Alt text](https://github.com/lens-ai/lensai_server/blob/main/Block_diagram.png)
 ## Usage
 ```sh
 git clone the lensai_server repo
@@ -41,19 +42,19 @@ The sensor data handler runs on port 8000 and can be accessed at http://localhos
 The Lens AI Dashboard is accessible on port 3000 on the host machine. Access it via http://localhost:3000.
 
 ### Screenshots of the Dashboard
-![Alt text](https://example.com/path/to/image.png)
+![Alt text](https://github.com/lens-ai/lensai_server/blob/main/Dashboard_1.png)
 
-![Alt text](https://example.com/path/to/image.png)
+![Alt text](https://github.com/lens-ai/lensai_server/blob/main/Dashboard_2.png)
 
-![Alt text](https://example.com/path/to/image.png)
+![Alt text](https://github.com/lens-ai/lensai_server/blob/main/Dashboard_3.png)
 
 #### Important Notes:
 In the Lens AI Dashboard for the panels make sure 
 1. GraphQL URL Configuration: Ensure the GraphQL URL in the Grafana panels is configured correctly as shown in the image below.
-![Alt text](https://example.com/path/to/image.png)
+![Alt text](https://github.com/lens-ai/lensai_server/blob/main/Dashboard_URL.png)
 
 2. GraphQL Query: Verify that the GraphQL query contains the correct parameters and query values.
-![Alt text](https://example.com/path/to/image.png)
+![Alt text](https://github.com/lens-ai/lensai_server/blob/main/Dashboard_Query.png)
 
 
 Software Stack
