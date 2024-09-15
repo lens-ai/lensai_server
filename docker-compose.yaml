@@ -1,0 +1,74 @@
+services:
+  mongo:
+    build:
+      context: ./mongo
+      dockerfile: Dockerfile
+    container_name: mongo
+    restart: unless-stopped
+    command: ["mongod", "--tlsMode", "disabled"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: lensai
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "0.5"   
+    ports:
+      - '27018:27017'
+    volumes:
+      - /tmp/mongodata:/data/db
+
+  fastapi_server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: server
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: '512M'
+    environment:
+      MONGO_URI: "mongodb://mongo:27017/lensai"      
+    restart: always
+    ports:
+      - "8000:8000"  # Expose FastAPI server to host
+    volumes:
+      - /tmp/lensai:/tmp
+    depends_on:
+      - mongo
+
+  graphql_server:
+    build:
+      context: ./graphql
+      dockerfile: Dockerfile
+    container_name: graphql_server
+    restart: always
+    ports:
+      - "8080:8080"  # Expose GraphQL server to host and internally
+    depends_on:
+      - mongo
+  
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana_new
+    restart: unless-stopped
+    environment:
+      - TERM=linux
+      - GF_INSTALL_PLUGINS=ae3e-plotly-panel,yesoreyeram-infinity-datasource,grafana-clock-panel,grafana-polystat-panel,grafana-mongodb-datasource
+    ports:
+      - '3030:3000'
+    volumes:
+      - grafana_storage:/var/lib/grafana
+      - ./grafana/provisioning/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/provisioning/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml  # Mount the dashboards provisioning file
+      - ./grafana/provisioning/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml  # Mount the datasources provisioning file
+    depends_on:
+      - mongo
+      - graphql_server
+ 
+volumes:
+  mongo_data:
+  grafana_storage:

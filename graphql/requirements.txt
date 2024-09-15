@@ -1,0 +1,5 @@
+python-magic>=0.4.15
+pymongo
+fastapi
+uvicorn
+strawberry-graphql==0.236.0

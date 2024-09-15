@@ -1,0 +1,8 @@
+pymongo
+datasketches
+numpy
+scikit-image
+scipy
+fastapi
+uvicorn
+python-multipart

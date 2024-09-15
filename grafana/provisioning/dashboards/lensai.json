@@ -1,0 +1,1214 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Metrics",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 10,
+      "options": {
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series && data.series.length > 0) {\n  const series = data.series[0]; // The dataset\n\n  if (series.fields && series.fields.length > 0) {\n    const values = series.fields[0].values;\n\n    if (values && values.length > 0) {\n      const jsonString = values[0];\n      \n      try {\n        const parsedData = JSON.parse(jsonString);\n\n        if (parsedData && parsedData.metricDistances && parsedData.metricDistances.distances) {\n          const distancesArray = parsedData.metricDistances.distances;\n\n          // Initialize an empty object to hold data for each metric/submetric combination\n          const metricsData = {};\n\n          // The distance type you want to plot (e.g., 'Pearson')\n          const distanceType = 'Pearson';\n\n          // Process each distance object\n          distancesArray.forEach(distanceObj => {\n            const timestamp = new Date(parseInt(distanceObj.timestamp) * 1000).toISOString(); // Convert timestamp to ISO format\n\n            distanceObj.distance.forEach(metricEntry => {\n              // Define a unique key for each metric/submetric combination\n              const metricKey = `${metricEntry.metric} ${metricEntry.submetric || ''}`.trim();\n              const distanceValue = metricEntry.distancevalues[distanceType];\n\n              // Initialize if not present\n              if (!metricsData[metricKey]) {\n                metricsData[metricKey] = { x: [], y: [], name: metricKey, mode: 'lines' };\n              }\n\n              // Update the metrics data\n              if (distanceValue !== undefined) {\n                metricsData[metricKey].x.push(timestamp);\n                metricsData[metricKey].y.push(distanceValue);\n              }\n            });\n          });\n\n          // Prepare the data array for Plotly\n          const plotlyData = Object.values(metricsData).map(metric => ({\n            x: metric.x,\n            y: metric.y,\n            type: 'scatter',\n            mode: metric.mode,\n            name: metric.name\n          }));\n\n          const layout = {\n            title: 'Metric Distances Over Time',\n            xaxis: {\n              title: 'Timestamp',\n              type: 'date',\n              tickformat: '%Y-%m-%d %H:%M:%S'\n            },\n            yaxis: {\n              title: 'Distance Values',\n              tickformat: '.2f'\n            },\n            showlegend: true,\n            plot_bgcolor: '#ffffff',\n            paper_bgcolor: '#ffffff',\n            font: {\n              family: 'Arial, sans-serif',\n              size: 12,\n              color: '#333333'\n            },\n            margin: {\n              l: 60,\n              r: 60,\n              t: 50,\n              b: 100\n            }\n          };\n\n          // Render the plot\n          return {\n            data: plotlyData,\n            layout: layout,\n          };\n        } else {\n          return {\n            data: [],\n            layout: { title: 'Invalid data format' },\n          };\n        }\n      } catch (error) {\n        console.error('Error parsing JSON:', error);\n        return {\n          data: [],\n          layout: { title: 'Error parsing JSON' },\n        };\n      }\n    } else {\n      return {\n        data: [],\n        layout: { title: 'No values found in the series' },\n      };\n    }\n  } else {\n    return {\n      data: [],\n      layout: { title: 'No fields found in the series' },\n    };\n  }\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricDistances(projectId: \"your_project_id\") {\n    projectId\n    distances {\n      timestamp\n      distance {\n        metric\n        submetric\n        distancevalues {\n          Pearson\n        }\n      }\n    }\n  }\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 0,
+        "y": 12
+      },
+      "id": 2,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series && data.series.length >= 2) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  if (seriesA.fields && seriesA.fields.length > 0 && seriesB.fields.length > 0) {\n    const valuesA = seriesA.fields[0].values;\n    const valuesB = seriesB.fields[0].values;\n\n    if (valuesA.length > 0 && valuesB.length > 0) {\n      const jsonStringA = valuesA[0];\n      const jsonStringB = valuesB[0];\n      \n      try {\n        const parsedDataA = JSON.parse(jsonStringA);\n        const parsedDataB = JSON.parse(jsonStringB);\n\n        if (parsedDataA.metricStats && parsedDataB.metricStats) {\n          const metricDataA = parsedDataA.metricStats;\n          const metricDataB = parsedDataB.metricStats;\n\n          // Combine x-values from both datasets and sort them\n          const allXValues = [...new Set([...metricDataA.x, ...metricDataB.x])].sort((a, b) => a - b);\n\n          // Create a map for PMF values aligned to the combined x-values\n          const pmfMapA = new Map(metricDataA.x.map((val, idx) => [val, metricDataA.pmf[idx]]));\n          const pmfMapB = new Map(metricDataB.x.map((val, idx) => [val, metricDataB.pmf[idx]]));\n\n          // Prepare data for Plotly by aligning PMF values to the combined x-axis\n          const plotlyData = [\n            {\n              x: allXValues.map(val => val.toFixed(2)), // Truncate x values for X-axis\n              y: allXValues.map(val => (pmfMapA.get(val) || 0).toFixed(4)), // Align and truncate PMF values for Original Data\n              type: 'bar',\n              name: 'Original Data',\n              marker: {\n                color: 'rgba(55, 128, 191, 0.7)', // Semi-transparent blue\n                line: {\n                  color: 'rgba(55, 128, 191, 1.0)',\n                  width: 2,\n                }\n              },\n            },\n            {\n              x: allXValues.map(val => val.toFixed(2)), // Truncate x values for X-axis\n              y: allXValues.map(val => (pmfMapB.get(val) || 0).toFixed(4)), // Align and truncate PMF values for Reference Data\n              type: 'bar',\n              name: 'Reference Data',\n              marker: {\n                color: 'rgba(255, 153, 51, 0.7)', // Semi-transparent orange\n                line: {\n                  color: 'rgba(255, 153, 51, 1.0)',\n                  width: 2,\n                }\n              },\n            }\n          ];\n\n          // Layout configuration\n          const layout = {\n            title: `${metricDataA.metric}`,\n            xaxis: { \n              title: 'X values',\n              tickangle: -45, // Rotate x-axis labels to avoid overlap\n              type: 'category'\n            },\n            yaxis: { \n              title: 'PMF values',\n              tickformat: '.2f', // Format y-axis ticks to 2 decimal places\n              range: [\n                Math.min(...plotlyData[0].y.map(Number), ...plotlyData[1].y.map(Number)), \n                Math.max(...plotlyData[0].y.map(Number), ...plotlyData[1].y.map(Number))\n              ] // Ensure y-axis range fits both PMF values\n            },\n            barmode: 'overlay', // Overlay bars on top of each other\n            plot_bgcolor: '#ffffff',\n            paper_bgcolor: '#ffffff',\n            font: {\n              family: 'Arial, sans-serif',\n              size: 12,\n              color: '#333333'\n            },\n            margin: {\n              l: 60,\n              r: 20,\n              t: 50,\n              b: 100\n            }\n          };\n\n          // Render the plot\n          return {\n            data: plotlyData,\n            layout: layout,\n          };\n        } else {\n          return {\n            data: [],\n            layout: { title: 'Invalid data format' },\n          };\n        }\n      } catch (error) {\n        console.error('Error parsing JSON:', error);\n        return {\n          data: [],\n          layout: { title: 'Error parsing JSON' },\n        };\n      }\n    } else {\n      return {\n        data: [],\n        layout: { title: 'No values found in the series' },\n      };\n    }\n  } else {\n    return {\n      data: [],\n      layout: { title: 'No fields found in the series' },\n    };\n  }\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"brightness\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"brightness\", reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 8,
+        "y": 12
+      },
+      "id": 6,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series && data.series.length >= 2) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  if (seriesA.fields && seriesA.fields.length > 0 && seriesB.fields.length > 0) {\n    const valuesA = seriesA.fields[0].values;\n    const valuesB = seriesB.fields[0].values;\n\n    if (valuesA.length > 0 && valuesB.length > 0) {\n      const jsonStringA = valuesA[0];\n      const jsonStringB = valuesB[0];\n      \n      try {\n        const parsedDataA = JSON.parse(jsonStringA);\n        const parsedDataB = JSON.parse(jsonStringB);\n\n        if (parsedDataA.metricStats && parsedDataB.metricStats) {\n          const metricDataA = parsedDataA.metricStats;\n          const metricDataB = parsedDataB.metricStats;\n\n          // Combine x-values from both datasets and sort them\n          const allXValues = [...new Set([...metricDataA.x, ...metricDataB.x])].sort((a, b) => a - b);\n\n          // Create a map for PMF values aligned to the combined x-values\n          const pmfMapA = new Map(metricDataA.x.map((val, idx) => [val, metricDataA.pmf[idx]]));\n          const pmfMapB = new Map(metricDataB.x.map((val, idx) => [val, metricDataB.pmf[idx]]));\n\n          // Prepare data for Plotly by aligning PMF values to the combined x-axis\n          const plotlyData = [\n            {\n              x: allXValues.map(val => val.toFixed(2)), // Truncate x values for X-axis\n              y: allXValues.map(val => (pmfMapA.get(val) || 0).toFixed(4)), // Align and truncate PMF values for Original Data\n              type: 'bar',\n              name: 'Original Data',\n              marker: {\n                color: 'rgba(55, 128, 191, 0.7)', // Semi-transparent blue\n                line: {\n                  color: 'rgba(55, 128, 191, 1.0)',\n                  width: 2,\n                }\n              },\n            },\n            {\n              x: allXValues.map(val => val.toFixed(2)), // Truncate x values for X-axis\n              y: allXValues.map(val => (pmfMapB.get(val) || 0).toFixed(4)), // Align and truncate PMF values for Reference Data\n              type: 'bar',\n              name: 'Reference Data',\n              marker: {\n                color: 'rgba(255, 153, 51, 0.7)', // Semi-transparent orange\n                line: {\n                  color: 'rgba(255, 153, 51, 1.0)',\n                  width: 2,\n                }\n              },\n            }\n          ];\n\n          // Determine the title based on the presence of submetric\n          const titleText = metricDataA.submetric \n            ? `${metricDataA.metric} - ${metricDataA.submetric}`\n            : `${metricDataA.metric}`;\n\n          // Layout configuration\n          const layout = {\n            title: titleText,\n            xaxis: { \n              title: 'X values',\n              tickangle: -45, // Rotate x-axis labels to avoid overlap\n              type: 'category'\n            },\n            yaxis: { \n              title: 'PMF values',\n              tickformat: '.2f', // Format y-axis ticks to 2 decimal places\n              range: [\n                Math.min(...plotlyData[0].y.map(Number), ...plotlyData[1].y.map(Number)), \n                Math.max(...plotlyData[0].y.map(Number), ...plotlyData[1].y.map(Number))\n              ] // Ensure y-axis range fits both PMF values\n            },\n            barmode: 'overlay', // Overlay bars on top of each other\n            plot_bgcolor: '#ffffff',\n            paper_bgcolor: '#ffffff',\n            font: {\n              family: 'Arial, sans-serif',\n              size: 12,\n              color: '#333333'\n            },\n            margin: {\n              l: 60,\n              r: 20,\n              t: 50,\n              b: 100\n            }\n          };\n\n          // Render the plot\n          return {\n            data: plotlyData,\n            layout: layout,\n          };\n        } else {\n          return {\n            data: [],\n            layout: { title: 'Invalid data format' },\n          };\n        }\n      } catch (error) {\n        console.error('Error parsing JSON:', error);\n        return {\n          data: [],\n          layout: { title: 'Error parsing JSON' },\n        };\n      }\n    } else {\n      return {\n        data: [],\n        layout: { title: 'No values found in the series' },\n      };\n    }\n  } else {\n    return {\n      data: [],\n      layout: { title: 'No fields found in the series' },\n    };\n  }\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "dataframe",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"sharpness\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"sharpness\",  reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 16,
+        "y": 12
+      },
+      "id": 7,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series && data.series.length >= 2) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  if (seriesA.fields && seriesA.fields.length > 0 && seriesB.fields.length > 0) {\n    const valuesA = seriesA.fields[0].values;\n    const valuesB = seriesB.fields[0].values;\n\n    if (valuesA.length > 0 && valuesB.length > 0) {\n      const jsonStringA = valuesA[0];\n      const jsonStringB = valuesB[0];\n      \n      try {\n        const parsedDataA = JSON.parse(jsonStringA);\n        const parsedDataB = JSON.parse(jsonStringB);\n\n        if (parsedDataA.metricStats && parsedDataB.metricStats) {\n          const metricDataA = parsedDataA.metricStats;\n          const metricDataB = parsedDataB.metricStats;\n\n          // Combine x-values from both datasets and sort them\n          const allXValues = [...new Set([...metricDataA.x, ...metricDataB.x])].sort((a, b) => a - b);\n\n          // Create a map for PMF values aligned to the combined x-values\n          const pmfMapA = new Map(metricDataA.x.map((val, idx) => [val, metricDataA.pmf[idx]]));\n          const pmfMapB = new Map(metricDataB.x.map((val, idx) => [val, metricDataB.pmf[idx]]));\n\n          // Prepare data for Plotly by aligning PMF values to the combined x-axis\n          const plotlyData = [\n            {\n              x: allXValues.map(val => val.toFixed(2)), // Truncate x values for X-axis\n              y: allXValues.map(val => (pmfMapA.get(val) || 0).toFixed(4)), // Align and truncate PMF values for Original Data\n              type: 'bar',\n              name: 'Original Data',\n              marker: {\n                color: 'rgba(55, 128, 191, 0.7)', // Semi-transparent blue\n                line: {\n                  color: 'rgba(55, 128, 191, 1.0)',\n                  width: 2,\n                }\n              },\n            },\n            {\n              x: allXValues.map(val => val.toFixed(2)), // Truncate x values for X-axis\n              y: allXValues.map(val => (pmfMapB.get(val) || 0).toFixed(4)), // Align and truncate PMF values for Reference Data\n              type: 'bar',\n              name: 'Reference Data',\n              marker: {\n                color: 'rgba(255, 153, 51, 0.7)', // Semi-transparent orange\n                line: {\n                  color: 'rgba(255, 153, 51, 1.0)',\n                  width: 2,\n                }\n              },\n            }\n          ];\n\n          // Determine the title based on the presence of submetric\n          const titleText = metricDataA.submetric \n            ? `${metricDataA.metric} - ${metricDataA.submetric}`\n            : `${metricDataA.metric}`;\n\n          // Layout configuration\n          const layout = {\n            title: titleText,\n            xaxis: { \n              title: 'X values',\n              tickangle: -45, // Rotate x-axis labels to avoid overlap\n              type: 'category'\n            },\n            yaxis: { \n              title: 'PMF values',\n              tickformat: '.2f', // Format y-axis ticks to 2 decimal places\n              range: [\n                Math.min(...plotlyData[0].y.map(Number), ...plotlyData[1].y.map(Number)), \n                Math.max(...plotlyData[0].y.map(Number), ...plotlyData[1].y.map(Number))\n              ] // Ensure y-axis range fits both PMF values\n            },\n            barmode: 'overlay', // Overlay bars on top of each other\n            plot_bgcolor: '#ffffff',\n            paper_bgcolor: '#ffffff',\n            font: {\n              family: 'Arial, sans-serif',\n              size: 12,\n              color: '#333333'\n            },\n            margin: {\n              l: 60,\n              r: 20,\n              t: 50,\n              b: 100\n            }\n          };\n\n          // Render the plot\n          return {\n            data: plotlyData,\n            layout: layout,\n          };\n        } else {\n          return {\n            data: [],\n            layout: { title: 'Invalid data format' },\n          };\n        }\n      } catch (error) {\n        console.error('Error parsing JSON:', error);\n        return {\n          data: [],\n          layout: { title: 'Error parsing JSON' },\n        };\n      }\n    } else {\n      return {\n        data: [],\n        layout: { title: 'No values found in the series' },\n      };\n    }\n  } else {\n    return {\n      data: [],\n      layout: { title: 'No fields found in the series' },\n    };\n  }\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "dataframe",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"noise\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"noise\",  reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 0,
+        "y": 23
+      },
+      "id": 1,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series && data.series.length >= 2) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  if (seriesA.fields && seriesA.fields.length > 0 && seriesB.fields && seriesB.fields.length > 0) {\n    const valuesA = seriesA.fields[0].values;\n    const valuesB = seriesB.fields[0].values;\n\n    if (valuesA && valuesA.length > 0 && valuesB && valuesB.length > 0) {\n      const jsonStringA = valuesA[0];\n      const jsonStringB = valuesB[0];\n      \n      try {\n        const parsedDataA = JSON.parse(jsonStringA);\n        const parsedDataB = JSON.parse(jsonStringB);\n\n        if (parsedDataA && parsedDataA.metricStats && parsedDataB && parsedDataB.metricStats) {\n          const metricDataA = parsedDataA.metricStats;\n          const metricDataB = parsedDataB.metricStats;\n\n          // Prepare data for Plotly\n          const plotlyData = [\n            {\n              x: metricDataA.x.map(val => val.toFixed(0)), // Truncate x values for X-axis\n              y: metricDataA.pmf.map(val => val.toFixed(4)), // Truncate PMF values for Y-axis\n              type: 'bar',\n              name: 'Original Data',\n              marker: {\n                color: 'rgba(55, 128, 191, 0.7)', // Semi-transparent blue\n                line: {\n                  color: 'rgba(55, 128, 191, 1.0)',\n                  width: 2,\n                }\n              },\n            },\n            {\n              x: metricDataB.x.map(val => val.toFixed(0)), // Truncate x values for X-axis\n              y: metricDataB.pmf.map(val => val.toFixed(4)), // Truncate PMF values for Y-axis\n              type: 'bar',\n              name: 'Reference Data',\n              marker: {\n                color: 'rgba(255, 153, 51, 0.7)', // Semi-transparent orange\n                line: {\n                  color: 'rgba(255, 153, 51, 1.0)',\n                  width: 2,\n                }\n              },\n            }\n          ];\n\n          // Layout configuration\n          const layout = {\n            title: `${metricDataA.metric} - ${metricDataA.submetric}`,\n            xaxis: { \n              title: 'X values',\n              tickangle: -45, // Rotate x-axis labels to avoid overlap\n              type: 'category'\n            },\n            yaxis: { \n              title: 'PMF values',\n              tickformat: '.2f', // Format y-axis ticks to 2 decimal places\n              range: [Math.min(...metricDataA.pmf, ...metricDataB.pmf), Math.max(...metricDataA.pmf, ...metricDataB.pmf)] // Ensure y-axis range fits both PMF values\n            },\n            barmode: 'overlay', // Overlay bars on top of each other\n            plot_bgcolor: '#ffffff',\n            paper_bgcolor: '#ffffff',\n            font: {\n              family: 'Arial, sans-serif',\n              size: 12,\n              color: '#333333'\n            },\n            margin: {\n              l: 60,\n              r: 20,\n              t: 50,\n              b: 100\n            }\n          };\n\n          // Render the plot\n          return {\n            data: plotlyData,\n            layout: layout,\n          };\n        } else {\n          return {\n            data: [],\n            layout: { title: 'Invalid data format' },\n          };\n        }\n      } catch (error) {\n        console.error('Error parsing JSON:', error);\n        return {\n          data: [],\n          layout: { title: 'Error parsing JSON' },\n        };\n      }\n    } else {\n      return {\n        data: [],\n        layout: { title: 'No values found in the series' },\n      };\n    }\n  } else {\n    return {\n      data: [],\n      layout: { title: 'No fields found in the series' },\n    };\n  }\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "dataframe",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"pixel\", submetric: \"0\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"0\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"pixel\", submetric: \"0\", reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"0\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 8,
+        "y": 23
+      },
+      "id": 4,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series && data.series.length >= 2) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  if (seriesA.fields && seriesA.fields.length > 0 && seriesB.fields && seriesB.fields.length > 0) {\n    const valuesA = seriesA.fields[0].values;\n    const valuesB = seriesB.fields[0].values;\n\n    if (valuesA && valuesA.length > 0 && valuesB && valuesB.length > 0) {\n      const jsonStringA = valuesA[0];\n      const jsonStringB = valuesB[0];\n      \n      try {\n        const parsedDataA = JSON.parse(jsonStringA);\n        const parsedDataB = JSON.parse(jsonStringB);\n\n        if (parsedDataA && parsedDataA.metricStats && parsedDataB && parsedDataB.metricStats) {\n          const metricDataA = parsedDataA.metricStats;\n          const metricDataB = parsedDataB.metricStats;\n\n          // Prepare data for Plotly\n          const plotlyData = [\n            {\n              x: metricDataA.x.map(val => val.toFixed(0)), // Truncate x values for X-axis\n              y: metricDataA.pmf.map(val => val.toFixed(4)), // Truncate PMF values for Y-axis\n              type: 'bar',\n              name: 'Original Data',\n              marker: {\n                color: 'rgba(55, 128, 191, 0.7)', // Semi-transparent blue\n                line: {\n                  color: 'rgba(55, 128, 191, 1.0)',\n                  width: 2,\n                }\n              },\n            },\n            {\n              x: metricDataB.x.map(val => val.toFixed(0)), // Truncate x values for X-axis\n              y: metricDataB.pmf.map(val => val.toFixed(4)), // Truncate PMF values for Y-axis\n              type: 'bar',\n              name: 'Reference Data',\n              marker: {\n                color: 'rgba(255, 153, 51, 0.7)', // Semi-transparent orange\n                line: {\n                  color: 'rgba(255, 153, 51, 1.0)',\n                  width: 2,\n                }\n              },\n            }\n          ];\n\n          // Layout configuration\n          const layout = {\n            title: `${metricDataA.metric} - ${metricDataA.submetric}`,\n            xaxis: { \n              title: 'X values',\n              tickangle: -45, // Rotate x-axis labels to avoid overlap\n              type: 'category'\n            },\n            yaxis: { \n              title: 'PMF values',\n              tickformat: '.2f', // Format y-axis ticks to 2 decimal places\n              range: [Math.min(...metricDataA.pmf, ...metricDataB.pmf), Math.max(...metricDataA.pmf, ...metricDataB.pmf)] // Ensure y-axis range fits both PMF values\n            },\n            barmode: 'overlay', // Overlay bars on top of each other\n            plot_bgcolor: '#ffffff',\n            paper_bgcolor: '#ffffff',\n            font: {\n              family: 'Arial, sans-serif',\n              size: 12,\n              color: '#333333'\n            },\n            margin: {\n              l: 60,\n              r: 20,\n              t: 50,\n              b: 100\n            }\n          };\n\n          // Render the plot\n          return {\n            data: plotlyData,\n            layout: layout,\n          };\n        } else {\n          return {\n            data: [],\n            layout: { title: 'Invalid data format' },\n          };\n        }\n      } catch (error) {\n        console.error('Error parsing JSON:', error);\n        return {\n          data: [],\n          layout: { title: 'Error parsing JSON' },\n        };\n      }\n    } else {\n      return {\n        data: [],\n        layout: { title: 'No values found in the series' },\n      };\n    }\n  } else {\n    return {\n      data: [],\n      layout: { title: 'No fields found in the series' },\n    };\n  }\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "dataframe",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"pixel\", submetric: \"1\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"1\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"pixel\", submetric: \"1\", reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"1\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 16,
+        "y": 23
+      },
+      "id": 3,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series && data.series.length >= 2) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  if (seriesA.fields && seriesA.fields.length > 0 && seriesB.fields.length > 0) {\n    const valuesA = seriesA.fields[0].values;\n    const valuesB = seriesB.fields[0].values;\n\n    if (valuesA.length > 0 && valuesB.length > 0) {\n      const jsonStringA = valuesA[0];\n      const jsonStringB = valuesB[0];\n      \n      try {\n        const parsedDataA = JSON.parse(jsonStringA);\n        const parsedDataB = JSON.parse(jsonStringB);\n\n        if (parsedDataA.metricStats && parsedDataB.metricStats) {\n          const metricDataA = parsedDataA.metricStats;\n          const metricDataB = parsedDataB.metricStats;\n\n          // Combine x-values from both datasets and sort them\n          const allXValues = [...new Set([...metricDataA.x, ...metricDataB.x])].sort((a, b) => a - b);\n\n          // Create a map for PMF values aligned to the combined x-values\n          const pmfMapA = new Map(metricDataA.x.map((val, idx) => [val, metricDataA.pmf[idx]]));\n          const pmfMapB = new Map(metricDataB.x.map((val, idx) => [val, metricDataB.pmf[idx]]));\n\n          // Prepare data for Plotly by aligning PMF values to the combined x-axis\n          const plotlyData = [\n            {\n              x: allXValues.map(val => val.toFixed(2)), // Truncate x values for X-axis\n              y: allXValues.map(val => (pmfMapA.get(val) || 0).toFixed(4)), // Align and truncate PMF values for Original Data\n              type: 'bar',\n              name: 'Original Data',\n              marker: {\n                color: 'rgba(55, 128, 191, 0.7)', // Semi-transparent blue\n                line: {\n                  color: 'rgba(55, 128, 191, 1.0)',\n                  width: 2,\n                }\n              },\n            },\n            {\n              x: allXValues.map(val => val.toFixed(2)), // Truncate x values for X-axis\n              y: allXValues.map(val => (pmfMapB.get(val) || 0).toFixed(4)), // Align and truncate PMF values for Reference Data\n              type: 'bar',\n              name: 'Reference Data',\n              marker: {\n                color: 'rgba(255, 153, 51, 0.7)', // Semi-transparent orange\n                line: {\n                  color: 'rgba(255, 153, 51, 1.0)',\n                  width: 2,\n                }\n              },\n            }\n          ];\n\n          // Determine the title based on the presence of submetric\n          const titleText = metricDataA.submetric \n            ? `${metricDataA.metric} - ${metricDataA.submetric}`\n            : `${metricDataA.metric}`;\n\n          // Layout configuration\n          const layout = {\n            title: titleText,\n            xaxis: { \n              title: 'X values',\n              tickangle: -45, // Rotate x-axis labels to avoid overlap\n              type: 'category'\n            },\n            yaxis: { \n              title: 'PMF values',\n              tickformat: '.2f', // Format y-axis ticks to 2 decimal places\n              range: [\n                Math.min(...plotlyData[0].y.map(Number), ...plotlyData[1].y.map(Number)), \n                Math.max(...plotlyData[0].y.map(Number), ...plotlyData[1].y.map(Number))\n              ] // Ensure y-axis range fits both PMF values\n            },\n            barmode: 'overlay', // Overlay bars on top of each other\n            plot_bgcolor: '#ffffff',\n            paper_bgcolor: '#ffffff',\n            font: {\n              family: 'Arial, sans-serif',\n              size: 12,\n              color: '#333333'\n            },\n            margin: {\n              l: 60,\n              r: 20,\n              t: 50,\n              b: 100\n            }\n          };\n\n          // Render the plot\n          return {\n            data: plotlyData,\n            layout: layout,\n          };\n        } else {\n          return {\n            data: [],\n            layout: { title: 'Invalid data format' },\n          };\n        }\n      } catch (error) {\n        console.error('Error parsing JSON:', error);\n        return {\n          data: [],\n          layout: { title: 'Error parsing JSON' },\n        };\n      }\n    } else {\n      return {\n        data: [],\n        layout: { title: 'No values found in the series' },\n      };\n    }\n  } else {\n    return {\n      data: [],\n      layout: { title: 'No fields found in the series' },\n    };\n  }\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "dataframe",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"pixel\", submetric: \"2\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"pixel\", submetric: \"2\", reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 0,
+        "y": 34
+      },
+      "id": 5,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series && data.series.length >= 2) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  if (seriesA.fields && seriesA.fields.length > 0 && seriesB.fields.length > 0) {\n    const valuesA = seriesA.fields[0].values;\n    const valuesB = seriesB.fields[0].values;\n\n    if (valuesA.length > 0 && valuesB.length > 0) {\n      const jsonStringA = valuesA[0];\n      const jsonStringB = valuesB[0];\n      \n      try {\n        const parsedDataA = JSON.parse(jsonStringA);\n        const parsedDataB = JSON.parse(jsonStringB);\n\n        if (parsedDataA.metricStats && parsedDataB.metricStats) {\n          const metricDataA = parsedDataA.metricStats;\n          const metricDataB = parsedDataB.metricStats;\n\n          // Combine x-values from both datasets and sort them\n          const allXValues = [...new Set([...metricDataA.x, ...metricDataB.x])].sort((a, b) => a - b);\n\n          // Create a map for PMF values aligned to the combined x-values\n          const pmfMapA = new Map(metricDataA.x.map((val, idx) => [val, metricDataA.pmf[idx]]));\n          const pmfMapB = new Map(metricDataB.x.map((val, idx) => [val, metricDataB.pmf[idx]]));\n\n          // Prepare data for Plotly by aligning PMF values to the combined x-axis\n          const plotlyData = [\n            {\n              x: allXValues.map(val => val.toFixed(2)), // Truncate x values for X-axis\n              y: allXValues.map(val => (pmfMapA.get(val) || 0).toFixed(4)), // Align and truncate PMF values for Original Data\n              type: 'bar',\n              name: 'Original Data',\n              marker: {\n                color: 'rgba(55, 128, 191, 0.7)', // Semi-transparent blue\n                line: {\n                  color: 'rgba(55, 128, 191, 1.0)',\n                  width: 2,\n                }\n              },\n            },\n            {\n              x: allXValues.map(val => val.toFixed(2)), // Truncate x values for X-axis\n              y: allXValues.map(val => (pmfMapB.get(val) || 0).toFixed(4)), // Align and truncate PMF values for Reference Data\n              type: 'bar',\n              name: 'Reference Data',\n              marker: {\n                color: 'rgba(255, 153, 51, 0.7)', // Semi-transparent orange\n                line: {\n                  color: 'rgba(255, 153, 51, 1.0)',\n                  width: 2,\n                }\n              },\n            }\n          ];\n\n          // Determine the title based on the presence of submetric\n          const titleText = metricDataA.submetric \n            ? `${metricDataA.metric} - ${metricDataA.submetric}`\n            : `${metricDataA.metric}`;\n\n          // Layout configuration\n          const layout = {\n            title: titleText,\n            xaxis: { \n              title: 'X values',\n              tickangle: -45, // Rotate x-axis labels to avoid overlap\n              type: 'category'\n            },\n            yaxis: { \n              title: 'PMF values',\n              tickformat: '.2f', // Format y-axis ticks to 2 decimal places\n              range: [\n                Math.min(...plotlyData[0].y.map(Number), ...plotlyData[1].y.map(Number)), \n                Math.max(...plotlyData[0].y.map(Number), ...plotlyData[1].y.map(Number))\n              ] // Ensure y-axis range fits both PMF values\n            },\n            barmode: 'overlay', // Overlay bars on top of each other\n            plot_bgcolor: '#ffffff',\n            paper_bgcolor: '#ffffff',\n            font: {\n              family: 'Arial, sans-serif',\n              size: 12,\n              color: '#333333'\n            },\n            margin: {\n              l: 60,\n              r: 20,\n              t: 50,\n              b: 100\n            }\n          };\n\n          // Render the plot\n          return {\n            data: plotlyData,\n            layout: layout,\n          };\n        } else {\n          return {\n            data: [],\n            layout: { title: 'Invalid data format' },\n          };\n        }\n      } catch (error) {\n        console.error('Error parsing JSON:', error);\n        return {\n          data: [],\n          layout: { title: 'Error parsing JSON' },\n        };\n      }\n    } else {\n      return {\n        data: [],\n        layout: { title: 'No values found in the series' },\n      };\n    }\n  } else {\n    return {\n      data: [],\n      layout: { title: 'No fields found in the series' },\n    };\n  }\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "dataframe",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"mean\", submetric: \"0\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"mean\",  submetric: \"0\", reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 8,
+        "y": 34
+      },
+      "id": 9,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series && data.series.length >= 2) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  if (seriesA.fields && seriesA.fields.length > 0 && seriesB.fields.length > 0) {\n    const valuesA = seriesA.fields[0].values;\n    const valuesB = seriesB.fields[0].values;\n\n    if (valuesA.length > 0 && valuesB.length > 0) {\n      const jsonStringA = valuesA[0];\n      const jsonStringB = valuesB[0];\n      \n      try {\n        const parsedDataA = JSON.parse(jsonStringA);\n        const parsedDataB = JSON.parse(jsonStringB);\n\n        if (parsedDataA.metricStats && parsedDataB.metricStats) {\n          const metricDataA = parsedDataA.metricStats;\n          const metricDataB = parsedDataB.metricStats;\n\n          // Combine x-values from both datasets and sort them\n          const allXValues = [...new Set([...metricDataA.x, ...metricDataB.x])].sort((a, b) => a - b);\n\n          // Create a map for PMF values aligned to the combined x-values\n          const pmfMapA = new Map(metricDataA.x.map((val, idx) => [val, metricDataA.pmf[idx]]));\n          const pmfMapB = new Map(metricDataB.x.map((val, idx) => [val, metricDataB.pmf[idx]]));\n\n          // Prepare data for Plotly by aligning PMF values to the combined x-axis\n          const plotlyData = [\n            {\n              x: allXValues.map(val => val.toFixed(2)), // Truncate x values for X-axis\n              y: allXValues.map(val => (pmfMapA.get(val) || 0).toFixed(4)), // Align and truncate PMF values for Original Data\n              type: 'bar',\n              name: 'Original Data',\n              marker: {\n                color: 'rgba(55, 128, 191, 0.7)', // Semi-transparent blue\n                line: {\n                  color: 'rgba(55, 128, 191, 1.0)',\n                  width: 2,\n                }\n              },\n            },\n            {\n              x: allXValues.map(val => val.toFixed(2)), // Truncate x values for X-axis\n              y: allXValues.map(val => (pmfMapB.get(val) || 0).toFixed(4)), // Align and truncate PMF values for Reference Data\n              type: 'bar',\n              name: 'Reference Data',\n              marker: {\n                color: 'rgba(255, 153, 51, 0.7)', // Semi-transparent orange\n                line: {\n                  color: 'rgba(255, 153, 51, 1.0)',\n                  width: 2,\n                }\n              },\n            }\n          ];\n\n          // Determine the title based on the presence of submetric\n          const titleText = metricDataA.submetric \n            ? `${metricDataA.metric} - ${metricDataA.submetric}`\n            : `${metricDataA.metric}`;\n\n          // Layout configuration\n          const layout = {\n            title: titleText,\n            xaxis: { \n              title: 'X values',\n              tickangle: -45, // Rotate x-axis labels to avoid overlap\n              type: 'category'\n            },\n            yaxis: { \n              title: 'PMF values',\n              tickformat: '.2f', // Format y-axis ticks to 2 decimal places\n              range: [\n                Math.min(...plotlyData[0].y.map(Number), ...plotlyData[1].y.map(Number)), \n                Math.max(...plotlyData[0].y.map(Number), ...plotlyData[1].y.map(Number))\n              ] // Ensure y-axis range fits both PMF values\n            },\n            barmode: 'overlay', // Overlay bars on top of each other\n            plot_bgcolor: '#ffffff',\n            paper_bgcolor: '#ffffff',\n            font: {\n              family: 'Arial, sans-serif',\n              size: 12,\n              color: '#333333'\n            },\n            margin: {\n              l: 60,\n              r: 20,\n              t: 50,\n              b: 100\n            }\n          };\n\n          // Render the plot\n          return {\n            data: plotlyData,\n            layout: layout,\n          };\n        } else {\n          return {\n            data: [],\n            layout: { title: 'Invalid data format' },\n          };\n        }\n      } catch (error) {\n        console.error('Error parsing JSON:', error);\n        return {\n          data: [],\n          layout: { title: 'Error parsing JSON' },\n        };\n      }\n    } else {\n      return {\n        data: [],\n        layout: { title: 'No values found in the series' },\n      };\n    }\n  } else {\n    return {\n      data: [],\n      layout: { title: 'No fields found in the series' },\n    };\n  }\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "dataframe",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"mean\", submetric: \"1\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"mean\",  submetric: \"1\", reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 16,
+        "y": 34
+      },
+      "id": 8,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series && data.series.length >= 2) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  if (seriesA.fields && seriesA.fields.length > 0 && seriesB.fields.length > 0) {\n    const valuesA = seriesA.fields[0].values;\n    const valuesB = seriesB.fields[0].values;\n\n    if (valuesA.length > 0 && valuesB.length > 0) {\n      const jsonStringA = valuesA[0];\n      const jsonStringB = valuesB[0];\n      \n      try {\n        const parsedDataA = JSON.parse(jsonStringA);\n        const parsedDataB = JSON.parse(jsonStringB);\n\n        if (parsedDataA.metricStats && parsedDataB.metricStats) {\n          const metricDataA = parsedDataA.metricStats;\n          const metricDataB = parsedDataB.metricStats;\n\n          // Combine x-values from both datasets and sort them\n          const allXValues = [...new Set([...metricDataA.x, ...metricDataB.x])].sort((a, b) => a - b);\n\n          // Create a map for PMF values aligned to the combined x-values\n          const pmfMapA = new Map(metricDataA.x.map((val, idx) => [val, metricDataA.pmf[idx]]));\n          const pmfMapB = new Map(metricDataB.x.map((val, idx) => [val, metricDataB.pmf[idx]]));\n\n          // Prepare data for Plotly by aligning PMF values to the combined x-axis\n          const plotlyData = [\n            {\n              x: allXValues.map(val => val.toFixed(2)), // Truncate x values for X-axis\n              y: allXValues.map(val => (pmfMapA.get(val) || 0).toFixed(4)), // Align and truncate PMF values for Original Data\n              type: 'bar',\n              name: 'Original Data',\n              marker: {\n                color: 'rgba(55, 128, 191, 0.7)', // Semi-transparent blue\n                line: {\n                  color: 'rgba(55, 128, 191, 1.0)',\n                  width: 2,\n                }\n              },\n            },\n            {\n              x: allXValues.map(val => val.toFixed(2)), // Truncate x values for X-axis\n              y: allXValues.map(val => (pmfMapB.get(val) || 0).toFixed(4)), // Align and truncate PMF values for Reference Data\n              type: 'bar',\n              name: 'Reference Data',\n              marker: {\n                color: 'rgba(255, 153, 51, 0.7)', // Semi-transparent orange\n                line: {\n                  color: 'rgba(255, 153, 51, 1.0)',\n                  width: 2,\n                }\n              },\n            }\n          ];\n\n          // Determine the title based on the presence of submetric\n          const titleText = metricDataA.submetric \n            ? `${metricDataA.metric} - ${metricDataA.submetric}`\n            : `${metricDataA.metric}`;\n\n          // Layout configuration\n          const layout = {\n            title: titleText,\n            xaxis: { \n              title: 'X values',\n              tickangle: -45, // Rotate x-axis labels to avoid overlap\n              type: 'category'\n            },\n            yaxis: { \n              title: 'PMF values',\n              tickformat: '.2f', // Format y-axis ticks to 2 decimal places\n              range: [\n                Math.min(...plotlyData[0].y.map(Number), ...plotlyData[1].y.map(Number)), \n                Math.max(...plotlyData[0].y.map(Number), ...plotlyData[1].y.map(Number))\n              ] // Ensure y-axis range fits both PMF values\n            },\n            barmode: 'overlay', // Overlay bars on top of each other\n            plot_bgcolor: '#ffffff',\n            paper_bgcolor: '#ffffff',\n            font: {\n              family: 'Arial, sans-serif',\n              size: 12,\n              color: '#333333'\n            },\n            margin: {\n              l: 60,\n              r: 20,\n              t: 50,\n              b: 100\n            }\n          };\n\n          // Render the plot\n          return {\n            data: plotlyData,\n            layout: layout,\n          };\n        } else {\n          return {\n            data: [],\n            layout: { title: 'Invalid data format' },\n          };\n        }\n      } catch (error) {\n        console.error('Error parsing JSON:', error);\n        return {\n          data: [],\n          layout: { title: 'Error parsing JSON' },\n        };\n      }\n    } else {\n      return {\n        data: [],\n        layout: { title: 'No values found in the series' },\n      };\n    }\n  } else {\n    return {\n      data: [],\n      layout: { title: 'No fields found in the series' },\n    };\n  }\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "dataframe",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"mean\", submetric: \"2\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"mean\",  submetric: \"2\", reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 0,
+        "y": 45
+      },
+      "id": 11,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  const plotlyData = [];\n  let title = '';\n\n  // Function to parse and process series data\n  function processSeries(series, name, color) {\n    if (series.fields && series.fields.length > 0) {\n      const values = series.fields[0].values;\n      if (values && values.length > 0) {\n        try {\n          const jsonString = values[0];\n          const parsedData = JSON.parse(jsonString);\n\n          if (parsedData && parsedData.metricStats) {\n            const metricData = parsedData.metricStats;\n\n            if (metricData && metricData.x && metricData.pmf) {\n              title = metricData.metric; // Use the metric name from the response\n\n              // Return the data for Plotly\n              return {\n                x: metricData.x,\n                y: metricData.pmf,\n                type: 'bar',\n                name: name,\n                marker: {\n                  color: color,\n                },\n              };\n            }\n          }\n        } catch (error) {\n          console.error(`Error parsing JSON for ${name}:`, error);\n        }\n      }\n    }\n    return null;\n  }\n\n  // Process series A (always present) and B (conditional)\n  const dataA = processSeries(seriesA, 'Original Data', 'rgba(55, 128, 191, 0.7)');\n  const dataB = seriesB && seriesB.fields && seriesB.fields.length > 0 && seriesB.fields[0].values[0]\n    ? processSeries(seriesB, 'Reference Data', 'rgba(255, 153, 51, 0.7)')\n    : null;\n\n  if (dataA) {\n    plotlyData.push(dataA);\n  }\n\n  if (dataB) {\n    plotlyData.push(dataB);\n  }\n\n  // If no data to plot\n  if (plotlyData.length === 0) {\n    return {\n      data: [],\n      layout: { title: 'No data available' },\n    };\n  }\n\n  // Combine and sort unique x-axis values\n  const allXValues = plotlyData.flatMap(trace => trace.x);\n  const sortedXValues = [...new Set(allXValues)].sort((a, b) => a - b);\n\n  // Align y-values with the sorted x-values\n  plotlyData.forEach(trace => {\n    const yMap = new Map(trace.x.map((x, index) => [x, trace.y[index]]));\n    trace.x = sortedXValues;\n    trace.y = sortedXValues.map(x => yMap.get(x) || 0); // Use 0 if the x-value is missing\n  });\n\n  // Layout configuration\n  const layout = {\n    title: title || 'Metric Data', // Use metric name as title\n    xaxis: {\n      title: 'X values',\n      type: 'linear',\n    },\n    yaxis: {\n      title: 'PMF values',\n      tickformat: '.2f',\n    },\n    showlegend: true,\n    plot_bgcolor: '#ffffff',\n    paper_bgcolor: '#ffffff',\n    font: {\n      family: 'Arial, sans-serif',\n      size: 12,\n      color: '#333333',\n    },\n    margin: {\n      l: 60,\n      r: 20,\n      t: 50,\n      b: 100,\n    },\n  };\n\n  // Render the plot\n  return {\n    data: plotlyData,\n    layout: layout,\n  };\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "dataframe",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"embeddings\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"embeddings\", reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 8,
+        "y": 45
+      },
+      "id": 12,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  const plotlyData = [];\n  let title = '';\n\n  // Function to parse and process series data\n  function processSeries(series, name, color) {\n    if (series.fields && series.fields.length > 0) {\n      const values = series.fields[0].values;\n      if (values && values.length > 0) {\n        try {\n          const jsonString = values[0];\n          const parsedData = JSON.parse(jsonString);\n\n          if (parsedData && parsedData.metricStats) {\n            const metricData = parsedData.metricStats;\n\n            if (metricData && metricData.x && metricData.pmf) {\n              // Set the title with metric and submetric if available\n              title = metricData.metric;\n              if (metricData.submetric) {\n                title += ` - ${metricData.submetric}`;\n              }\n\n              // Return the data for Plotly\n              return {\n                x: metricData.x,\n                y: metricData.pmf,\n                type: 'bar',\n                name: name,\n                marker: {\n                  color: color,\n                },\n              };\n            }\n          }\n        } catch (error) {\n          console.error(`Error parsing JSON for ${name}:`, error);\n        }\n      }\n    }\n    return null;\n  }\n\n  // Process series A (always present) and B (conditional)\n  const dataA = processSeries(seriesA, 'Original Data', 'rgba(55, 128, 191, 0.7)');\n  const dataB = seriesB && seriesB.fields && seriesB.fields.length > 0 && seriesB.fields[0].values[0]\n    ? processSeries(seriesB, 'Reference Data', 'rgba(255, 153, 51, 0.7)')\n    : null;\n\n  if (dataA) {\n    plotlyData.push(dataA);\n  }\n  \n  if (dataB) {\n    plotlyData.push(dataB);\n  }\n\n  // If no data to plot\n  if (plotlyData.length === 0) {\n    return {\n      data: [],\n      layout: { title: 'No data available' },\n    };\n  }\n\n  // Sorting x-axis values\n  const allXValues = plotlyData.flatMap(trace => trace.x);\n  const sortedXValues = [...new Set(allXValues)].sort((a, b) => a - b);\n\n  plotlyData.forEach(trace => {\n    trace.x = sortedXValues;\n    trace.y = sortedXValues.map(x => {\n      const index = trace.x.indexOf(x);\n      return index >= 0 ? trace.y[index] : null;\n    }).filter(y => y !== null);\n  });\n\n  // Layout configuration\n  const layout = {\n    title: title || 'Metric Data', // Use metric and submetric as title\n    xaxis: {\n      title: 'X values',\n      type: 'linear',\n    },\n    yaxis: {\n      title: 'PMF values',\n      tickformat: '.2f',\n    },\n    showlegend: true,\n    plot_bgcolor: '#ffffff',\n    paper_bgcolor: '#ffffff',\n    font: {\n      family: 'Arial, sans-serif',\n      size: 12,\n      color: '#333333',\n    },\n    margin: {\n      l: 60,\n      r: 20,\n      t: 50,\n      b: 100,\n    },\n  };\n\n  // Render the plot\n  return {\n    data: plotlyData,\n    layout: layout,\n  };\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "dataframe",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"Mobilenet\", submetric: \"Binary1\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"Mobilenet\", submetric: \"Binary1\", reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 16,
+        "y": 45
+      },
+      "id": 13,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  const plotlyData = [];\n  let title = '';\n\n  // Function to parse and process series data\n  function processSeries(series, name, color) {\n    if (series.fields && series.fields.length > 0) {\n      const values = series.fields[0].values;\n      if (values && values.length > 0) {\n        try {\n          const jsonString = values[0];\n          const parsedData = JSON.parse(jsonString);\n\n          if (parsedData && parsedData.metricStats) {\n            const metricData = parsedData.metricStats;\n\n            if (metricData && metricData.x && metricData.pmf) {\n              // Set the title with metric and submetric if available\n              title = metricData.metric;\n              if (metricData.submetric) {\n                title += ` - ${metricData.submetric}`;\n              }\n\n              // Return the data for Plotly\n              return {\n                x: metricData.x,\n                y: metricData.pmf,\n                type: 'bar',\n                name: name,\n                marker: {\n                  color: color,\n                },\n              };\n            }\n          }\n        } catch (error) {\n          console.error(`Error parsing JSON for ${name}:`, error);\n        }\n      }\n    }\n    return null;\n  }\n\n  // Process series A (always present) and B (conditional)\n  const dataA = processSeries(seriesA, 'Original Data', 'rgba(55, 128, 191, 0.7)');\n  const dataB = seriesB && seriesB.fields && seriesB.fields.length > 0 && seriesB.fields[0].values[0]\n    ? processSeries(seriesB, 'Reference Data', 'rgba(255, 153, 51, 0.7)')\n    : null;\n\n  if (dataA) {\n    plotlyData.push(dataA);\n  }\n  \n  if (dataB) {\n    plotlyData.push(dataB);\n  }\n\n  // If no data to plot\n  if (plotlyData.length === 0) {\n    return {\n      data: [],\n      layout: { title: 'No data available' },\n    };\n  }\n\n  // Sorting x-axis values\n  const allXValues = plotlyData.flatMap(trace => trace.x);\n  const sortedXValues = [...new Set(allXValues)].sort((a, b) => a - b);\n\n  plotlyData.forEach(trace => {\n    trace.x = sortedXValues;\n    trace.y = sortedXValues.map(x => {\n      const index = trace.x.indexOf(x);\n      return index >= 0 ? trace.y[index] : null;\n    }).filter(y => y !== null);\n  });\n\n  // Layout configuration\n  const layout = {\n    title: title || 'Metric Data', // Use metric and submetric as title\n    xaxis: {\n      title: 'X values',\n      type: 'linear',\n    },\n    yaxis: {\n      title: 'PMF values',\n      tickformat: '.2f',\n    },\n    showlegend: true,\n    plot_bgcolor: '#ffffff',\n    paper_bgcolor: '#ffffff',\n    font: {\n      family: 'Arial, sans-serif',\n      size: 12,\n      color: '#333333',\n    },\n    margin: {\n      l: 60,\n      r: 20,\n      t: 50,\n      b: 100,\n    },\n  };\n\n  // Render the plot\n  return {\n    data: plotlyData,\n    layout: layout,\n  };\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "dataframe",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"Mobilenet\", submetric: \"Binary0\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"Mobilenet\", submetric: \"Binary0\", reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 0,
+        "y": 56
+      },
+      "id": 14,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  const plotlyData = [];\n  let title = '';\n\n  // Function to parse and process series data\n  function processSeries(series, name, color) {\n    if (series.fields && series.fields.length > 0) {\n      const values = series.fields[0].values;\n      if (values && values.length > 0) {\n        try {\n          const jsonString = values[0];\n          const parsedData = JSON.parse(jsonString);\n\n          if (parsedData && parsedData.metricStats) {\n            const metricData = parsedData.metricStats;\n\n            if (metricData && metricData.x && metricData.pmf) {\n              // Set the title with metric and submetric if available\n              title = metricData.metric;\n              if (metricData.submetric) {\n                title += ` - ${metricData.submetric}`;\n              }\n\n              // Return the data for Plotly\n              return {\n                x: metricData.x,\n                y: metricData.pmf,\n                type: 'bar',\n                name: name,\n                marker: {\n                  color: color,\n                },\n              };\n            }\n          }\n        } catch (error) {\n          console.error(`Error parsing JSON for ${name}:`, error);\n        }\n      }\n    }\n    return null;\n  }\n\n  // Process series A (always present) and B (conditional)\n  const dataA = processSeries(seriesA, 'Original Data', 'rgba(55, 128, 191, 0.7)');\n  const dataB = seriesB && seriesB.fields && seriesB.fields.length > 0 && seriesB.fields[0].values[0]\n    ? processSeries(seriesB, 'Reference Data', 'rgba(255, 153, 51, 0.7)')\n    : null;\n\n  if (dataA) {\n    plotlyData.push(dataA);\n  }\n  \n  if (dataB) {\n    plotlyData.push(dataB);\n  }\n\n  // If no data to plot\n  if (plotlyData.length === 0) {\n    return {\n      data: [],\n      layout: { title: 'No data available' },\n    };\n  }\n\n  // Sorting x-axis values\n  const allXValues = plotlyData.flatMap(trace => trace.x);\n  const sortedXValues = [...new Set(allXValues)].sort((a, b) => a - b);\n\n  plotlyData.forEach(trace => {\n    trace.x = sortedXValues;\n    trace.y = sortedXValues.map(x => {\n      const index = trace.x.indexOf(x);\n      return index >= 0 ? trace.y[index] : null;\n    }).filter(y => y !== null);\n  });\n\n  // Layout configuration\n  const layout = {\n    title: title || 'Metric Data', // Use metric and submetric as title\n    xaxis: {\n      title: 'X values',\n      type: 'linear',\n    },\n    yaxis: {\n      title: 'PMF values',\n      tickformat: '.2f',\n    },\n    showlegend: true,\n    plot_bgcolor: '#ffffff',\n    paper_bgcolor: '#ffffff',\n    font: {\n      family: 'Arial, sans-serif',\n      size: 12,\n      color: '#333333',\n    },\n    margin: {\n      l: 60,\n      r: 20,\n      t: 50,\n      b: 100,\n    },\n  };\n\n  // Render the plot\n  return {\n    data: plotlyData,\n    layout: layout,\n  };\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "dataframe",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"leastconfidence\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"leastconfidence\", reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 8,
+        "y": 56
+      },
+      "id": 15,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  const plotlyData = [];\n  let title = '';\n\n  // Function to parse and process series data\n  function processSeries(series, name, color) {\n    if (series.fields && series.fields.length > 0) {\n      const values = series.fields[0].values;\n      if (values && values.length > 0) {\n        try {\n          const jsonString = values[0];\n          const parsedData = JSON.parse(jsonString);\n\n          if (parsedData && parsedData.metricStats) {\n            const metricData = parsedData.metricStats;\n\n            if (metricData && metricData.x && metricData.pmf) {\n              // Set the title with metric and submetric if available\n              title = metricData.metric;\n              if (metricData.submetric) {\n                title += ` - ${metricData.submetric}`;\n              }\n\n              // Return the data for Plotly\n              return {\n                x: metricData.x,\n                y: metricData.pmf,\n                type: 'bar',\n                name: name,\n                marker: {\n                  color: color,\n                },\n              };\n            }\n          }\n        } catch (error) {\n          console.error(`Error parsing JSON for ${name}:`, error);\n        }\n      }\n    }\n    return null;\n  }\n\n  // Process series A (always present) and B (conditional)\n  const dataA = processSeries(seriesA, 'Original Data', 'rgba(55, 128, 191, 0.7)');\n  const dataB = seriesB && seriesB.fields && seriesB.fields.length > 0 && seriesB.fields[0].values[0]\n    ? processSeries(seriesB, 'Reference Data', 'rgba(255, 153, 51, 0.7)')\n    : null;\n\n  if (dataA) {\n    plotlyData.push(dataA);\n  }\n  \n  if (dataB) {\n    plotlyData.push(dataB);\n  }\n\n  // If no data to plot\n  if (plotlyData.length === 0) {\n    return {\n      data: [],\n      layout: { title: 'No data available' },\n    };\n  }\n\n  // Sorting x-axis values\n  const allXValues = plotlyData.flatMap(trace => trace.x);\n  const sortedXValues = [...new Set(allXValues)].sort((a, b) => a - b);\n\n  plotlyData.forEach(trace => {\n    trace.x = sortedXValues;\n    trace.y = sortedXValues.map(x => {\n      const index = trace.x.indexOf(x);\n      return index >= 0 ? trace.y[index] : null;\n    }).filter(y => y !== null);\n  });\n\n  // Layout configuration\n  const layout = {\n    title: title || 'Metric Data', // Use metric and submetric as title\n    xaxis: {\n      title: 'X values',\n      type: 'linear',\n    },\n    yaxis: {\n      title: 'PMF values',\n      tickformat: '.2f',\n    },\n    showlegend: true,\n    plot_bgcolor: '#ffffff',\n    paper_bgcolor: '#ffffff',\n    font: {\n      family: 'Arial, sans-serif',\n      size: 12,\n      color: '#333333',\n    },\n    margin: {\n      l: 60,\n      r: 20,\n      t: 50,\n      b: 100,\n    },\n  };\n\n  // Render the plot\n  return {\n    data: plotlyData,\n    layout: layout,\n  };\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "dataframe",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"ratioconfidence\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"ratioconfidence\", reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 16,
+        "y": 56
+      },
+      "id": 16,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "if (data && data.series) {\n  const seriesA = data.series[0]; // Original dataset\n  const seriesB = data.series[1]; // Reference dataset\n\n  const plotlyData = [];\n  let title = '';\n\n  // Function to parse and process series data\n  function processSeries(series, name, color) {\n    if (series.fields && series.fields.length > 0) {\n      const values = series.fields[0].values;\n      if (values && values.length > 0) {\n        try {\n          const jsonString = values[0];\n          const parsedData = JSON.parse(jsonString);\n\n          if (parsedData && parsedData.metricStats) {\n            const metricData = parsedData.metricStats;\n\n            if (metricData && metricData.x && metricData.pmf) {\n              // Set the title with metric and submetric if available\n              title = metricData.metric;\n              if (metricData.submetric) {\n                title += ` - ${metricData.submetric}`;\n              }\n\n              // Return the data for Plotly\n              return {\n                x: metricData.x,\n                y: metricData.pmf,\n                type: 'bar',\n                name: name,\n                marker: {\n                  color: color,\n                },\n              };\n            }\n          }\n        } catch (error) {\n          console.error(`Error parsing JSON for ${name}:`, error);\n        }\n      }\n    }\n    return null;\n  }\n\n  // Process series A (always present) and B (conditional)\n  const dataA = processSeries(seriesA, 'Original Data', 'rgba(55, 128, 191, 0.7)');\n  const dataB = seriesB && seriesB.fields && seriesB.fields.length > 0 && seriesB.fields[0].values[0]\n    ? processSeries(seriesB, 'Reference Data', 'rgba(255, 153, 51, 0.7)')\n    : null;\n\n  if (dataA) {\n    plotlyData.push(dataA);\n  }\n  \n  if (dataB) {\n    plotlyData.push(dataB);\n  }\n\n  // If no data to plot\n  if (plotlyData.length === 0) {\n    return {\n      data: [],\n      layout: { title: 'No data available' },\n    };\n  }\n\n  // Sorting x-axis values\n  const allXValues = plotlyData.flatMap(trace => trace.x);\n  const sortedXValues = [...new Set(allXValues)].sort((a, b) => a - b);\n\n  plotlyData.forEach(trace => {\n    trace.x = sortedXValues;\n    trace.y = sortedXValues.map(x => {\n      const index = trace.x.indexOf(x);\n      return index >= 0 ? trace.y[index] : null;\n    }).filter(y => y !== null);\n  });\n\n  // Layout configuration\n  const layout = {\n    title: title || 'Metric Data', // Use metric and submetric as title\n    xaxis: {\n      title: 'X values',\n      type: 'linear',\n    },\n    yaxis: {\n      title: 'PMF values',\n      tickformat: '.2f',\n    },\n    showlegend: true,\n    plot_bgcolor: '#ffffff',\n    paper_bgcolor: '#ffffff',\n    font: {\n      family: 'Arial, sans-serif',\n      size: 12,\n      color: '#333333',\n    },\n    margin: {\n      l: 60,\n      r: 20,\n      t: 50,\n      b: 100,\n    },\n  };\n\n  // Render the plot\n  return {\n    data: plotlyData,\n    layout: layout,\n  };\n} else {\n  return {\n    data: [],\n    layout: { title: 'No series found' },\n  };\n}\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "dataframe",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"entropyconfidence\") {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "hide": false,
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  metricStats(projectId: \"your_project_id\", metric: \"entropyconfidence\", reference: true) {\n    metric\n    submetric\n    pmf\n    x\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ads2ai2wnahvke"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 67
+      },
+      "id": 17,
+      "options": {
+        "config": "",
+        "data": "",
+        "onclick": "console.log(data)\nwindow.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "// Helper function to generate a color for a given index\nfunction getColor(index) {\n    const colors = [\n        'rgba(55, 128, 191, 0.7)', // Blue\n        'rgba(219, 64, 82, 0.7)',  // Red\n        'rgba(0, 204, 150, 0.7)',  // Green\n        'rgba(204, 204, 0, 0.7)',  // Yellow\n        'rgba(255, 127, 14, 0.7)', // Orange\n        'rgba(106, 61, 154, 0.7)', // Purple\n        'rgba(0, 128, 128, 0.7)', // Teal\n        'rgba(128, 0, 128, 0.7)', // Magenta\n        'rgba(255, 99, 71, 0.7)', // Tomato\n        'rgba(64, 224, 208, 0.7)' // Turquoise\n    ];\n    return colors[index % colors.length];\n}\n\n// Function to process each series item and convert to Plotly-compatible format\nfunction processSeries(seriesItem, color) {\n    const metricsData = {};\n\n    if (seriesItem.fields && seriesItem.fields.length > 0) {\n        const field = seriesItem.fields[0];\n        const values = field.values;\n\n        if (values && values.length > 0) {\n            try {\n                // Parse JSON string\n                const jsonString = values[0];\n                const parsedData = JSON.parse(jsonString);\n\n                if (parsedData && parsedData.project && parsedData.project.data) {\n                    // Iterate through the data structure\n                    parsedData.project.data.forEach(sensorData => {\n                        if (sensorData.data) {\n                            sensorData.data.forEach(metricType => {\n                                if (metricType.data) {\n                                    metricType.data.forEach(metricData => {\n                                        const metricName = metricData.metric;\n                                        const submetricName = metricData.submetric || 'default';\n\n                                        if (!metricsData[metricName]) {\n                                            metricsData[metricName] = {};\n                                        }\n                                        if (!metricsData[metricName][submetricName]) {\n                                            metricsData[metricName][submetricName] = {};\n                                        }\n\n                                        if (metricData.data) {\n                                            metricData.data.forEach(entry => {\n                                                let timestamp;\n                                                try {\n                                                    timestamp = new Date(entry.timestamp).getTime(); // Convert to milliseconds\n                                                    if (isNaN(timestamp)) {\n                                                        throw new Error('Invalid timestamp');\n                                                    }\n                                                } catch (error) {\n                                                    console.error('Error parsing timestamp:', entry.timestamp, error);\n                                                    return; // Skip this entry\n                                                }\n\n                                                if (!metricsData[metricName][submetricName][timestamp]) {\n                                                    metricsData[metricName][submetricName][timestamp] = 0;\n                                                }\n                                                metricsData[metricName][submetricName][timestamp]++;\n                                            });\n                                        }\n                                    });\n                                }\n                            });\n                        }\n                    });\n                } else {\n                    console.warn('Parsed data is missing the expected structure:', parsedData);\n                }\n            } catch (error) {\n                console.error('Error parsing JSON data:', error);\n            }\n        } else {\n            console.warn('Values or buffer are missing or empty in series:', values);\n        }\n    } else {\n        console.warn('Series item does not contain fields:', seriesItem);\n    }\n\n    // Convert aggregated data to Plotly traces\n    const plotlyData = [];\n    let colorIndex = 0;\n\n    Object.keys(metricsData).forEach(metricName => {\n        Object.keys(metricsData[metricName]).forEach(submetricName => {\n            const timestamps = [];\n            const counts = [];\n\n            // Aggregate by interval\n            const interval = 60 * 60 * 1000; // 60 minutes in milliseconds\n            const aggregatedCounts = {};\n\n            Object.keys(metricsData[metricName][submetricName]).forEach(timestamp => {\n                const date = new Date(parseInt(timestamp));\n\n                // Check if date is valid\n                if (isNaN(date.getTime())) {\n                    console.error('Invalid date:', date);\n                    return; // Skip this timestamp\n                }\n\n                const roundedTimestamp = new Date(Math.floor(date.getTime() / interval) * interval); // Round down to the nearest interval\n\n                if (!aggregatedCounts[roundedTimestamp.getTime()]) {\n                    aggregatedCounts[roundedTimestamp.getTime()] = 0;\n                }\n                aggregatedCounts[roundedTimestamp.getTime()] += metricsData[metricName][submetricName][timestamp];\n            });\n\n            Object.keys(aggregatedCounts).forEach(timestamp => {\n                timestamps.push(new Date(parseInt(timestamp)).toISOString());\n                counts.push(aggregatedCounts[timestamp]);\n            });\n\n            // Get color for this trace\n            const traceColor = getColor(colorIndex++);\n\n            plotlyData.push({\n                x: timestamps,\n                y: counts,\n                mode: 'lines+markers',\n                type: 'scatter',\n                name: `${metricName}${submetricName ? ' - ' + submetricName : ''}`,\n                line: { color: traceColor }\n            });\n        });\n    });\n\n    return plotlyData;\n}\n\n// Main function to process Grafana data and generate Plotly-compatible data\nfunction processGrafanaData(data) {\n    console.log('Received data:', data);\n\n    if (data && Array.isArray(data.series)) {\n        const seriesList = data.series;\n        console.log('Series data:', seriesList);\n\n        const plotlyData = [];\n        let title = 'Image Samples';\n\n        seriesList.forEach((seriesItem, index) => {\n            // Process each series item with a unique color\n            const seriesData = processSeries(seriesItem, getColor(index));\n            if (seriesData.length > 0) {\n                plotlyData.push(...seriesData);\n            }\n        });\n\n        console.log('Plotly data:', plotlyData);\n\n        return {\n            data: plotlyData,\n            layout: {\n                title: title,\n                xaxis: { title: 'Timestamp', tickformat: '%Y-%m-%d %H:%M:%S' },\n                yaxis: { title: 'Images sampled Count' },\n                plot_bgcolor: '#ffffff',\n                paper_bgcolor: '#ffffff',\n                font: {\n                    family: 'Arial, sans-serif',\n                    size: 12,\n                    color: '#333333',\n                },\n                margin: {\n                    l: 60,\n                    r: 20,\n                    t: 50,\n                    b: 100,\n                },\n            }\n        };\n    } else {\n        console.error('No valid series found in the Grafana data.');\n        return {\n            data: [],\n            layout: {\n                title: 'No valid data found',\n                xaxis: { title: 'X Axis' },\n                yaxis: { title: 'Y Axis' },\n                plot_bgcolor: '#ffffff',\n                paper_bgcolor: '#ffffff',\n                font: {\n                    family: 'Arial, sans-serif',\n                    size: 12,\n                    color: '#333333',\n                },\n                margin: {\n                    l: 60,\n                    r: 20,\n                    t: 50,\n                    b: 100,\n                },\n            }\n        };\n    }\n}\n\n// Call the function with the Grafana data\nreturn processGrafanaData(data);\n"
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "ads2ai2wnahvke"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "graphql",
+          "url": "http://host.docker.internal:8080/graphql",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_graphql_query": "query {\n  project(projectName: \"your_project_id\") {\n    projectName\n    status\n    data {\n      sensorId\n      timestamp\n      data {\n        metrictype\n        data {\n          metric\n          submetric\n          data {\n            timestamp\n            url\n          }\n        }\n      }\n    }\n  }\n}",
+            "body_graphql_variables": "{\n  \"projectId\": \"asdfh123\",\n  \"metricName\": \"pixel\",\n  \"submetricName\": \"2\"\n}",
+            "body_type": "graphql",
+            "data": "",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "ae3e-plotly-panel"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Lens Dashboard",
+  "uid": "adsa9d1d5s4qoq",
+  "version": 61,
+  "weekStart": ""
+}
