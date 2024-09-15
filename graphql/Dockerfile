@@ -13,6 +13,6 @@ COPY ../config.ini /app/config.ini
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY config.py database.py lensai_db.tar.gz main.py models.py resolvers.py schema.py /app/
+COPY database.py main.py models.py resolvers.py schema.py /app/
 
 CMD ["python3", "/app/main.py"] 

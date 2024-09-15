@@ -3,14 +3,12 @@ Lens AI Server is a comprehensive solution for collecting, aggregating, and moni
 
 ### Lens AI Server Components
 The Lens AI Server comprises five major components:
+1. Lens AI Sensor Data Handler: Manages sensor HTTP requests and stores incoming sensor data.
+2. Lens AI Workers: Aggregates, transforms, and extracts metric data from sensor inputs for analysis.
+3. Lens AI GraphQL Server: Provides a GraphQL endpoint to fetch the aggregated metrics, enabling flexible and efficient data retrieval.
+4. Lens AI Monitoring Server: Uses Grafana to build interactive dashboards for monitoring key metrics.
+5. Lens AI Database: Utilizes MongoDB to store sensor data and metrics for persistent and scalable storage.
 
-1.Lens AI Sensor Data Handler: Manages sensor HTTP requests and stores incoming sensor data.
-2.Lens AI Workers: Aggregates, transforms, and extracts metric data from sensor inputs for analysis.
-3.Lens AI GraphQL Server: Provides a GraphQL endpoint to fetch the aggregated metrics, enabling flexible and efficient data retrieval.
-4.Lens AI Monitoring Server: Uses Grafana to build interactive dashboards for monitoring key metrics.
-5.Lens AI Database: Utilizes MongoDB to store sensor data and metrics for persistent and scalable storage.
-
-![Alt text](https://github.com/lens-ai/lensai_server/blob/main/Block_diagram.png)
 ## Usage
 ```sh
 git clone the lensai_server repo
@@ -27,13 +25,13 @@ docker-compose up --build -d
 
 Adjust the config file based on the proejct requirements mainly . Please don't change the DB collection names.
 
-[DEFAULT]
-PROJECT_ID = your project id
-SLEEP_INTERVAL = 10 (Sleep interv of the workers)
-NUM_WORKERS = 1 (Number of worker threads)
+- [DEFAULT]
+- PROJECT_ID = your project id
+- SLEEP_INTERVAL = 10 (Sleep interv of the workers)
+- NUM_WORKERS = 1 (Number of worker threads)
 
-[paths]
-BASE_PATH = /tmp (Base path is the path under which the data is mounted on the container)
+- [paths]
+- BASE_PATH = /tmp (Base path is the path under which the data is mounted on the container)
 
 ### Lens AI sensor data handler :
 The sensor data handler runs on port 8000 and can be accessed at http://localhost:8000 on the host machine. To change the host port, modify the docker-compose.yml file to your preferred port.
@@ -57,12 +55,12 @@ In the Lens AI Dashboard for the panels make sure
 ![Alt text](https://github.com/lens-ai/lensai_server/blob/main/Dashboard_Query.png)
 
 
+
 Software Stack
 Lens AI Server is built using the following technologies:
 
-FastAPI: Provides a high-performance web framework for the sensor data handler.
-Strawberry: A GraphQL library for Python that powers the GraphQL server.
-Datasketches: Used for efficient and scalable data sketches for metrics calculations.
-Grafana: Offers powerful and flexible dashboards for real-time monitoring.
-MongoDB: A NoSQL database for storing and managing sensor data and metrics.
-
+- FastAPI: Provides a high-performance web framework for the sensor data handler.
+- Strawberry: A GraphQL library for Python that powers the GraphQL server.
+- Datasketches: Used for efficient and scalable data sketches for metrics calculations.
+- Grafana: Offers powerful and flexible dashboards for real-time monitoring.
+- MongoDB: A NoSQL database for storing and managing sensor data and metrics.
