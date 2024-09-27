@@ -1,24 +1,20 @@
 services:
   mongo:
+    image: mongo:6.0
     build:
       context: ./mongo
       dockerfile: Dockerfile
     container_name: mongo
     restart: unless-stopped
-    command: ["mongod", "--tlsMode", "disabled"]
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin
       MONGO_INITDB_DATABASE: lensai
-    deploy:
-      resources:
-        limits:
-          memory: 1g
-          cpus: "0.5"   
     ports:
       - '27018:27017'
     volumes:
-      - /tmp/mongodata:/data/db
+      - /tmp/mongodata:/tmp/db
+
 
   fastapi_server:
     build:

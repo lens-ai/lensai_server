@@ -1,16 +1,17 @@
 import os
 import time
 import tarfile
-import configparser
+import json
 from pathlib import Path
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
-from pymongo import MongoClient
+from pymongo import MongoClient, ASCENDING
 from pymongo.errors import DuplicateKeyError
+import configparser
 
 # server.py (or any other script)
 from logger import setup_logger
 import logging
-
 # Set up logging
 setup_logger()
 
@@ -22,117 +23,135 @@ config.read('config.ini')
 BASE_PATH = Path(config['paths']['BASE_PATH'])
 DB_URI = config['mongodb']['MONGO_URI']
 DB_NAME = config['mongodb']['DB_NAME']
-COLLECTION_NAME_STATS = config['mongodb']['COLLECTION_NAME_STATS']
-COLLECTION_NAME_AGGREGATE = config['mongodb']['COLLECTION_NAME_AGGREGATE']
+COLLECTION_NAME = config['mongodb']['COLLECTION_NAME_DATA']
 PROJECT_NAME = config['DEFAULT']['PROJECT_ID']
 NUM_WORKERS = int(config['DEFAULT']['NUM_WORKERS'])
+POLL_INTERVAL = int(config['DEFAULT'].get('SLEEP_INTERVAL', 10))  # Default to 10 seconds
 
 # MongoDB Client
 client = MongoClient(DB_URI)
 db = client[DB_NAME]
-collection_stats = db[COLLECTION_NAME_STATS]
-collection_aggregate = db[COLLECTION_NAME_AGGREGATE]
+collection = db[COLLECTION_NAME]
+collection_aggregate = db["to_aggregate"]
+
+def setup_collection():
+    # Ensure the collection and indexes are created
+    if COLLECTION_NAME not in db.list_collection_names():
+        db.create_collection(COLLECTION_NAME)
+        logging.info(f"Created collection: {COLLECTION_NAME}")
+    
+    # Ensure unique index on sensor_id and timestamp
+    collection.create_index([("sensor_id", ASCENDING), ("timestamp", ASCENDING)], unique=True)
+    
+    if "to_aggregate" not in db.list_collection_names():
+        db.create_collection("to_aggregate")
+        logging.info("Created collection: to_aggregate")
 
 # Function to extract tar.gz without root folder
 def extract_tar_without_root(tar_path, extract_path):
-    """Extracts tar.gz file without creating a root directory."""
-    try:
-        with tarfile.open(tar_path, "r:gz") as tar:
-            tar.extractall(path=extract_path)
-        logging.info(f"Extracted {tar_path} to {extract_path}")
-    except (tarfile.TarError, IOError) as e:
-        logging.error(f"Error extracting {tar_path}: {e}")
+    with tarfile.open(tar_path, "r:gz") as tar:
+        for member in tar.getmembers():
+            tar.extract(member, path=extract_path)
 
 # Function to process and insert data into MongoDB
 def process_and_insert_data(sensor_id, timestamp, dir_path):
-    """
-    Process tar.gz data for a specific sensor and timestamp, 
-    and insert or update MongoDB documents.
-    """
     # Prepare the initial data
     data = {
         "project_name": PROJECT_NAME,
         "sensor_id": sensor_id,
         "timestamp": timestamp,
         "status": "processing",
-        "aggregated": 0,
         "type": []
     }
 
-    # Insert or update the document in the stats collection
+    # Insert the initial document or find existing one
     try:
-        collection_stats.update_one(
+        collection.update_one(
             {"sensor_id": sensor_id, "timestamp": timestamp},
             {"$setOnInsert": data},
             upsert=True
         )
     except DuplicateKeyError:
+        # Document already exists, no further action needed here
         logging.info(f"Document already exists for sensor_id: {sensor_id}, timestamp: {timestamp}")
         return
 
-    # Extract tar.gz file if it exists
-    tar_path = os.path.join(dir_path, "stats.tar.gz")
+    # Extract tar.gz file and process data
+    tar_path = os.path.join(dir_path, "data.tar.gz")
     if os.path.exists(tar_path):
         extract_tar_without_root(tar_path, dir_path)
-        os.remove(tar_path)  # Clean up the tar.gz file
+        os.remove(tar_path)  # Delete the tar.gz file after extraction
 
-    # Process extracted data and update MongoDB
-    processed_data = {"type": [], "status": "completed"}
-    for metrictype in ["imgstats", "modelstats", "samples", "customstats"]:
+    # Gather processed data
+    processed_data = {
+        "type": [],
+        "status": "completed"
+    }
+    for metrictype in ["imagestats", "modelstats", "samples", "customstats"]:
         metrictype_path = os.path.join(dir_path, metrictype)
         if os.path.exists(metrictype_path):
-            stats = []
+            data = defaultdict(lambda: defaultdict(list))
             for file_name in os.listdir(metrictype_path):
-                if file_name.endswith(".bin"):
-                    metric, submetric = file_name.split('_', 1) if '_' in file_name else (file_name, "")
-                    metric = metric.replace(".bin", "")
-                    submetric = submetric.replace(".bin", "")
-                    stats.append({
-                        "metric": metric,
-                        "submetric": submetric,
-                        "path": os.path.join(metrictype_path, file_name)
-                    })
-            if stats:
+                if file_name.endswith(".png"):
+                    file_path = os.path.join(metrictype_path, file_name)
+                    name_without_extension = file_name.replace('.png', '')
+                    parts = name_without_extension.split('_')
+                    if len(parts) == 3:
+                        # If there are three parts, we have metric, submetric, and timestamp
+                        metric, submetric, _ = parts
+                    elif len(parts) == 2:
+                        # If there are two parts, we have metric and timestamp
+                        metric, _ = parts
+                        submetric = None
+                    else:
+                        # If the filename structure is unexpected, skip it
+                        continue
+                    data[metric][submetric].append(file_path)
+
+            if data:
+                metric_data_list = []
+                for metric, submetrics in data.items():
+                    for submetric, files in submetrics.items():
+                        metric_data_list.append({
+                            "metric": metric,
+                            "submetric": submetric,
+                            "data": files
+                        })
                 processed_data["type"].append({
                     "metrictype": metrictype,
-                    "stats": stats
+                    "data": metric_data_list
                 })
 
-    # Update the document with the processed data
-    try:
-        collection_stats.update_one(
-            {"sensor_id": sensor_id, "timestamp": timestamp},
-            {"$set": processed_data}
-        )
-        logging.info(f"Data processed for sensor_id: {sensor_id}, timestamp: {timestamp}")
+    # Update the document with processed data and set status to "completed"
+    collection.update_one(
+        {"sensor_id": sensor_id, "timestamp": timestamp},
+        {"$set": processed_data}
+    )
+    logging.info(f"Data processed and updated for sensor_id: {sensor_id}, timestamp: {timestamp}")
+    collection_aggregate.update_one(
+        {"sensor_id": sensor_id, "timestamp": timestamp, "file_type": "data"},
+        {"$set": {"extracted": 1}}
+    )
 
-        # Update the aggregation status
-        collection_aggregate.update_one(
-            {"sensor_id": sensor_id, "timestamp": timestamp},
-            {"$set": {"extracted": 1}}
-        )
-    except Exception as e:
-        logging.error(f"Error updating document for sensor_id: {sensor_id}, timestamp: {timestamp}: {e}")
-
-# Function to continuously check and process unextracted documents
+# Function to check and process unextracted documents
 def check_and_process_unextracted_docs(executor):
-    """Continuously checks for unextracted documents and processes them."""
     while True:
-        try:
-            # Find unextracted documents
-            unextracted_docs = collection_aggregate.find({"extracted": 0, "file_type": "stats"})
-            for doc in unextracted_docs:
-                sensor_id = doc["sensor_id"]
-                timestamp = doc["timestamp"]
-                dir_path = doc["path"]
-                executor.submit(process_and_insert_data, sensor_id, timestamp, dir_path)
-        except Exception as e:
-            logging.error(f"Error processing unextracted documents: {e}")
-        time.sleep(10)  # Poll every 10 seconds
+        unextracted_docs = collection_aggregate.find({"extracted": 0, "file_type":"data"})
+        for doc in unextracted_docs:
+            sensor_id = doc["sensor_id"]
+            timestamp = doc["timestamp"]
+            dir_path = doc["path"]
+            executor.submit(process_and_insert_data, sensor_id, timestamp, dir_path)
+        time.sleep(POLL_INTERVAL)  # Wait before checking again
+
+
 
 if __name__ == "__main__":
-    # Setup Thread Pool for parallel processing
-    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
-        # Start checking and processing unextracted documents
-        check_and_process_unextracted_docs(executor)
+    # Setup MongoDB collection and indexes
+    setup_collection()
 
+    # Setup Thread Pool
+    executor = ThreadPoolExecutor(max_workers=NUM_WORKERS)
+
+    # Start checking and processing unextracted documents
+    check_and_process_unextracted_docs(executor)
