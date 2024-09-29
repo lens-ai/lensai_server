@@ -183,7 +183,6 @@ def process_and_insert_overall_stats():
                 "pmf": pmf,
                 "x": x
             })
-    
     # Process reference data
     reference_data = get_latest_reference_data()
     if reference_data:
@@ -207,7 +206,10 @@ def process_and_insert_overall_stats():
         update_aggregated_status([reference_data['_id']])
     else:
         reference_stats = get_latest_reference_stats()
-        
+
+    if not reference_stats:
+        logging.error("Reference Stats Empty, Please publish reference stats")
+
     dist = compute_metrics(histograms, reference_stats)
     overall_data = {
         "project_id": PROJECT_ID,

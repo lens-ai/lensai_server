@@ -77,7 +77,7 @@ def process_and_insert_data(sensor_id, timestamp, dir_path):
         os.remove(tar_path)  # Clean up the tar.gz file
     # Process extracted data and update MongoDB
     processed_data = {"type": [], "status": "completed"}
-    for metrictype in ["imgstats", "modelstats", "samples", "customstats"]:
+    for metrictype in ["imgstats", "modelstats", "samples", "custom"]:
         metrictype_path = os.path.join(dir_path, metrictype)
         if os.path.exists(metrictype_path):
             stats = []
